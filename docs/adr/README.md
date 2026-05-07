@@ -17,3 +17,4 @@ Each ADR follows a lightweight format:
 - [ADR-0002: Self-install ArgoCD via Terraform helm_release](0002-argocd-self-install.md)
 - [ADR-0003: Two CI/CD pipelines separated by trigger](0003-two-cicd-pipelines.md)
 - [ADR-0004: Kustomize overlays for dev and prod in one config repo](0004-kustomize-overlays.md)
+- [ADR-0005: S3-native state locking instead of DynamoDB](0005-s3-native-locking.md)
