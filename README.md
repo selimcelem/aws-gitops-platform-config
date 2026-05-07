@@ -57,3 +57,22 @@ All infrastructure is created with terraform apply and torn down with terraform 
 ## Status
 
 Project scaffolded. Infrastructure modules in progress.
+
+## Architecture decisions
+
+### ArgoCD: self-installed via Terraform helm_release
+
+ArgoCD is installed onto the EKS cluster via Terraform `helm_release` rather than the AWS-managed EKS Capability for ArgoCD (launched November 2025). The managed capability is the right choice for production teams who want AWS to own the SLA and patching, but for this project I install it myself for three reasons: it demonstrates real platform engineering work, it avoids the per-hour capability cost on top of EKS, and it keeps the entire platform reproducible from a single `terraform apply` without requiring AWS Identity Center setup.
+
+### CI/CD: two pipelines, separated by trigger
+
+Two GitHub Actions workflows, one per repo:
+
+- **App repo** (`build-and-push.yml`): triggered by changes to application code or Dockerfiles. Builds the image, pushes to ECR, and updates the image tag in this config repo to trigger ArgoCD sync.
+- **Config repo** (`terraform.yml`): triggered by changes to `infrastructure/**`. Runs `terraform plan` on PRs and `terraform apply` on merge to main.
+
+This separation means a Terraform typo never rebuilds containers, and a code change never runs `terraform apply`. Each pipeline does only what its trigger demands.
+
+### Architecture decision records
+
+Detailed reasoning for the major architecture choices lives in [docs/adr/](docs/adr/).
