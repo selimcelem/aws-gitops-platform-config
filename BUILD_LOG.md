@@ -31,3 +31,19 @@
 **Why:** During the first init of the platform Terraform, the AWS provider emitted a deprecation warning for the `dynamodb_table` backend parameter. Newer Terraform (1.10+) and AWS provider (5.x) versions support locking the state directly via an object in the S3 bucket, eliminating the need for a separate DynamoDB table. Since no platform state existed yet, this was the right moment to switch to the current recommended pattern.
 
 **Result:** DynamoDB lock table destroyed. Bootstrap module simplified to S3-only. Backend config now uses `use_lockfile = true`. Deprecation warning gone. ADR-0005 records the decision.
+
+## 2026-05-07 (later)
+
+**What:** I applied the VPC module to AWS, verified the deployment in the console, and captured screenshots as portfolio evidence. Screenshots cover the VPC list and details, the resource map showing the visual topology, all six subnets with their CIDRs, the route tables, and the NAT Gateway with its Elastic IP attached. Screenshots committed under `docs/screenshots/vpc/` and embedded in the VPC module README.
+
+**Why:** Visual proof that the Terraform code produced what was intended is central to a portfolio piece. A reviewer scrolling through the repo can see the module code, then see the actual AWS resources it created, without needing access to my AWS account. Account IDs were redacted from screenshots before committing.
+
+**Result:** 18 resources created via `terraform apply`. State stored in S3, locked via S3-native lockfile. VPC running with three public and three private subnets across eu-west-1a/b/c, single NAT Gateway in eu-west-1a, Internet Gateway attached. Five screenshots captured and referenced from the module README.
+
+## 2026-05-07 (session end)
+
+**What:** I ran `terraform destroy` against the platform configuration to tear down the VPC and all associated resources.
+
+**Why:** Cost discipline. The platform is destroyed at the end of every working session so I am never billed for idle infrastructure. The bootstrap (S3 state bucket) stays alive across sessions because it holds the state of the platform; the platform itself is recreated cleanly from `terraform apply` next session.
+
+**Result:** 18 resources destroyed in approximately 1 minute 10 seconds. NAT Gateway dominated the destroy time as expected. State file in S3 is now effectively empty (319 bytes of metadata, no resources). All AWS costs for this session have stopped. Total session cost: a few cents (NAT Gateway ran for roughly 35 minutes).
