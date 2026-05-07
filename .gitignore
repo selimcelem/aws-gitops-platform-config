@@ -1,4 +1,5 @@
 ﻿# Terraform
+**/.terraform/
 **/.terraform/*
 *.tfstate
 *.tfstate.*
@@ -13,6 +14,10 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+# Local backend config (contains project-specific resource names)
+backend.hcl
+*.backend.hcl
 
 # Python
 __pycache__/
