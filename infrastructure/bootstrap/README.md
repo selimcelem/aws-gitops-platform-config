@@ -3,7 +3,7 @@
 This module creates the AWS resources that Terraform itself depends on for state management:
 
 - An S3 bucket for the remote state file (versioned, encrypted, public access blocked).
-- A DynamoDB table for state locking.
+- S3-native state locking is used (configured via `use_lockfile = true` in the backend config), so no separate locking table is required.
 
 These resources have a different lifecycle from the rest of the platform. The platform under infrastructure/modules/ is destroyed at the end of every working session for cost reasons. The bootstrap stays up across sessions because it holds the state of the platform.
 
@@ -32,5 +32,5 @@ terraform destroy
 ## Outputs
 
 - tfstate_bucket_name: name of the S3 bucket to use as the backend.
-- tflock_table_name: name of the DynamoDB table to use for locking.
-- aws_region: region the bucket and table live in.
+- tfstate_bucket_arn: full ARN of the bucket.
+- aws_region: region the bucket lives in.

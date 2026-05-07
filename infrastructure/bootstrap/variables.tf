@@ -1,4 +1,4 @@
-﻿variable "aws_region" {
+variable "aws_region" {
   description = "AWS region for the bootstrap resources."
   type        = string
   default     = "eu-west-1"
