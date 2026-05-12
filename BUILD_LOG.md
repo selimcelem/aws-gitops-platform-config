@@ -47,3 +47,19 @@
 **Why:** Cost discipline. The platform is destroyed at the end of every working session so I am never billed for idle infrastructure. The bootstrap (S3 state bucket) stays alive across sessions because it holds the state of the platform; the platform itself is recreated cleanly from `terraform apply` next session.
 
 **Result:** 18 resources destroyed in approximately 1 minute 10 seconds. NAT Gateway dominated the destroy time as expected. State file in S3 is now effectively empty (319 bytes of metadata, no resources). All AWS costs for this session have stopped. Total session cost: a few cents (NAT Gateway ran for roughly 35 minutes).
+
+## 2026-05-12
+
+**What:** I added the EKS module to the platform Terraform and brought up an EKS cluster end-to-end. The module provisions the cluster control plane, a managed node group of two t3.medium on-demand instances, the IAM roles for both, an OIDC provider for IRSA, and an explicit access entry granting my IAM user cluster-admin via the `AmazonEKSClusterAdminPolicy`. The cluster is in `EKS API and ConfigMap` authentication mode with `bootstrap_cluster_creator_admin_permissions = false`, so all admin grants are declared in code rather than implicit.
+
+**Why:** EKS is the compute foundation the rest of the platform sits on. Every other Kubernetes-native component (ArgoCD, Prometheus, Grafana, the API and worker services) runs as pods on this cluster. Going with explicit access entries instead of the bootstrap permission flag means every cluster-admin grant is visible in Terraform, auditable in git history, and reproducible across cluster recreations.
+
+**Result:** Cluster `gitops-platform-dev` running Kubernetes 1.31 with two Ready nodes. Verified end-to-end with `kubectl get nodes`, `kubectl get pods --all-namespaces` (aws-node, coredns, kube-proxy all Running across both nodes), and `kubectl cluster-info`. OIDC provider registered so IRSA will work for pod-level AWS access later. Five screenshots captured under `docs/screenshots/eks/` and referenced from the module README. Two pinned providers (`hashicorp/aws ~> 5.0`, `hashicorp/tls ~> 4.0`) now used by the root configuration.
+
+## 2026-05-12 (session end)
+
+**What:** I ran `terraform destroy` to tear down the platform infrastructure (VPC, EKS cluster, node group, IAM roles, OIDC provider, access entries) after verifying the EKS module worked end-to-end.
+
+**Why:** Cost discipline. EKS is the largest cost contributor in this project (control plane plus EC2 nodes), so destroying at session end is non-negotiable. The bootstrap S3 bucket stays alive because it holds the platform state; the platform itself is recreated cleanly from `terraform apply` next session.
+
+**Result:** 29 resources destroyed. All AWS costs for this session have stopped. Total session cost: roughly 60-70 cents (NAT for ~2 hours, EKS control plane and two t3.medium nodes for ~50 minutes, including the destroy-and-recreate cycle when switching `bootstrap_cluster_creator_admin_permissions` from true to false).

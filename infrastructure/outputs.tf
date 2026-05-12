@@ -20,3 +20,23 @@ output "availability_zones" {
   description = "Availability zones the VPC spans."
   value       = module.vpc.availability_zones
 }
+
+output "eks_cluster_name" {
+  description = "Name of the EKS cluster."
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "API server endpoint of the EKS cluster."
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_cluster_version" {
+  description = "Kubernetes version running on the control plane."
+  value       = module.eks.cluster_version
+}
+
+output "eks_oidc_provider_arn" {
+  description = "ARN of the OIDC provider, for IRSA trust policies."
+  value       = module.eks.oidc_provider_arn
+}

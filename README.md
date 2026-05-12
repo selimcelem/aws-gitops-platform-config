@@ -23,27 +23,33 @@ The application source lives in the companion repo: [aws-gitops-platform-app](ht
 
 ```
 aws-gitops-platform-config/
-├── argocd/applications/      # ArgoCD Application CRDs
+├── argocd/applications/              # ArgoCD Application CRDs
 ├── charts/
-│   ├── api/                  # Helm chart for API service
-│   └── worker/               # Helm chart for worker service
+│   ├── api/                          # Helm chart for API service
+│   └── worker/                       # Helm chart for worker service
+├── docs/
+│   ├── adr/                          # Architecture Decision Records
+│   └── screenshots/                  # Console evidence for deployed modules
 ├── infrastructure/
+│   ├── main.tf, variables.tf, outputs.tf   # Root config, S3 backend
+│   ├── .terraform.lock.hcl           # Provider version pins (committed)
+│   ├── bootstrap/                    # S3 state backend, separate lifecycle
 │   └── modules/
-│       ├── argocd/           # ArgoCD via helm_release
-│       ├── ecr/              # One repo per service
-│       ├── eks/              # Cluster + managed node group
-│       ├── iam/              # IRSA roles, OIDC provider
-│       ├── rds/              # PostgreSQL, single AZ, smallest instance
-│       ├── sqs/              # Job queue
-│       └── vpc/              # 3 public, 3 private subnets, NAT
+│       ├── argocd/                   # ArgoCD via helm_release
+│       ├── ecr/                      # One repo per service
+│       ├── eks/                      # Cluster + managed node group
+│       ├── iam/                      # IRSA roles, OIDC provider
+│       ├── rds/                      # PostgreSQL, single AZ, smallest instance
+│       ├── sqs/                      # Job queue
+│       └── vpc/                      # 3 public, 3 private subnets, NAT
 ├── kustomize/
-│   ├── base/                 # Shared resources
+│   ├── base/                         # Shared resources
 │   └── overlays/
-│       ├── dev/              # Active environment
-│       └── prod/             # Pattern only, not deployed
+│       ├── dev/                      # Active environment
+│       └── prod/                     # Pattern only, not deployed
 └── observability/
-    ├── grafana/              # Dashboards as code
-    └── prometheus/           # Scrape config and values
+    ├── grafana/                      # Dashboards as code
+    └── prometheus/                   # Scrape config and values
 ```
 
 ## Region
@@ -56,7 +62,7 @@ All infrastructure is created with terraform apply and torn down with terraform 
 
 ## Status
 
-Project scaffolded. Infrastructure modules in progress.
+The VPC and EKS modules are implemented and verified end-to-end against AWS (deployment evidence under docs/screenshots/). The remaining infrastructure modules (ECR, IAM, RDS, SQS, ArgoCD) are scaffolded and in progress.
 
 ## Architecture decisions
 

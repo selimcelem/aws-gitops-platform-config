@@ -15,3 +15,9 @@ variable "environment" {
   type        = string
   default     = "dev"
 }
+
+variable "cluster_admin_principal_arn" {
+  description = "ARN of the IAM user or role to grant EKS cluster-admin access. Set this to your own IAM user ARN so you can kubectl against the cluster."
+  type        = string
+  default     = ""
+}
