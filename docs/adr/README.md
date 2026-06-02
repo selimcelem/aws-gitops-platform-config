@@ -20,3 +20,5 @@ Each ADR follows a lightweight format:
 - [ADR-0005: S3-native state locking instead of DynamoDB](0005-s3-native-locking.md)
 - [ADR-0006: Explicit EKS access entries instead of bootstrap admin permissions](0006-eks-explicit-access-entries.md)
 - [ADR-0007: Least-privilege IAM via IRSA with deferred resource wiring](0007-irsa-least-privilege.md)
+- [ADR-0008: VPC design with single NAT Gateway and three Availability Zones](0008-vpc-design.md)
+- [ADR-0009: ECR repositories with immutable tags and lifecycle policy](0009-ecr-immutable-tags.md)
