@@ -1,4 +1,4 @@
-﻿terraform {
+terraform {
   required_version = ">= 1.5.0"
 
   required_providers {
@@ -59,4 +59,29 @@ module "eks" {
   node_min_size               = 1
   node_max_size               = 3
   cluster_admin_principal_arn = var.cluster_admin_principal_arn
+}
+
+module "ecr" {
+  source = "./modules/ecr"
+
+  project_name  = var.project_name
+  environment   = var.environment
+  service_names = ["api", "worker"]
+}
+
+module "iam" {
+  source = "./modules/iam"
+
+  project_name = var.project_name
+  environment  = var.environment
+  aws_region   = var.aws_region
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+
+  service_namespace = "default"
+
+  # SQS and RDS modules not yet deployed; permissions will be wired up later
+  sqs_job_queue_arn = ""
+  db_secret_arn     = ""
 }

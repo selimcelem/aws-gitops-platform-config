@@ -40,3 +40,18 @@ output "eks_oidc_provider_arn" {
   description = "ARN of the OIDC provider, for IRSA trust policies."
   value       = module.eks.oidc_provider_arn
 }
+
+output "ecr_repository_urls" {
+  description = "Map of service name to ECR repository URL (e.g. api -> account.dkr.ecr.region.amazonaws.com/gitops-platform-dev-api)."
+  value       = module.ecr.repository_urls
+}
+
+output "ecr_repository_arns" {
+  description = "Map of service name to ECR repository ARN. Used by IAM policies that grant push or pull access."
+  value       = module.ecr.repository_arns
+}
+
+output "iam_service_role_arns" {
+  description = "Map of service name to IAM role ARN for IRSA. Annotate matching Kubernetes ServiceAccounts with eks.amazonaws.com/role-arn pointing at these."
+  value       = module.iam.service_role_arns
+}

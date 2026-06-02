@@ -63,3 +63,27 @@
 **Why:** Cost discipline. EKS is the largest cost contributor in this project (control plane plus EC2 nodes), so destroying at session end is non-negotiable. The bootstrap S3 bucket stays alive because it holds the platform state; the platform itself is recreated cleanly from `terraform apply` next session.
 
 **Result:** 29 resources destroyed. All AWS costs for this session have stopped. Total session cost: roughly 60-70 cents (NAT for ~2 hours, EKS control plane and two t3.medium nodes for ~50 minutes, including the destroy-and-recreate cycle when switching `bootstrap_cluster_creator_admin_permissions` from true to false).
+
+## 2026-06-02 (ECR module)
+
+**What:** I added the ECR module to the platform Terraform and brought up two container repositories: `gitops-platform-dev-api` and `gitops-platform-dev-worker`. Each repository is configured with immutable tags, scan-on-push, AES-256 encryption, and a lifecycle policy that retains the 10 most recent images and expires the rest.
+
+**Why:** ECR is the source-of-truth registry that links the app repo's CI pipeline to the cluster's running images. Immutable tags are non-negotiable for a GitOps workflow: the config repo references images by tag, and a mutable tag would let someone silently swap what `v1.0.0` points to without a Git commit, breaking the audit trail that GitOps depends on.
+
+**Result:** Two repositories live in eu-west-1, both with immutable tags and scan-on-push enabled. Lifecycle policies attached. Three screenshots committed under `docs/screenshots/ecr/`. Module is generic enough to add a third service later by appending to the `service_names` list in the root configuration.
+
+## 2026-06-02 (IAM module)
+
+**What:** I added the IAM module that creates IRSA (IAM Roles for Service Accounts) roles for the API and worker services. Each role has a trust policy scoped to its specific Kubernetes ServiceAccount via the cluster's OIDC provider, plus a least-privilege CloudWatch Logs policy attached today. SQS and Secrets Manager policies are wired as conditional resources that activate when the SQS and RDS modules come online.
+
+**Why:** IRSA is how pods get AWS credentials in a production-grade EKS setup. The alternative (injecting access keys via environment variables, or letting every pod use the node's IAM role) either creates long-lived credential risk or violates least privilege. IRSA gives each pod its own short-lived, scoped credentials via web identity tokens, with no static keys anywhere in the cluster.
+
+**Result:** Two roles live in IAM: `gitops-platform-dev-api` and `gitops-platform-dev-worker`. Trust policies correctly pin to `system:serviceaccount:default:<service>` so only the matching ServiceAccount can assume the role. CloudWatch Logs policy is scoped to log groups under `/aws/eks/gitops-platform-dev/*`, not the entire account. Three screenshots committed under `docs/screenshots/iam/`. The `count = var.x != "" ? 1 : 0` pattern keeps SQS and Secrets Manager policies dormant today and ready to attach automatically when downstream modules exist.
+
+## 2026-06-02 (session end)
+
+**What:** I ran `terraform destroy` to tear down the platform infrastructure after verifying the ECR and IAM modules. The destroy covered the VPC, EKS cluster, node group, OIDC provider, EKS access entries, both ECR repositories with their lifecycle policies, and both IRSA roles with their CloudWatch Logs policy attachments.
+
+**Why:** Cost discipline. EKS is the largest cost contributor and runs only when there is active work to do. The S3 state bucket persists, so the next session's `terraform apply` will recreate the same 38 resources from the same code.
+
+**Result:** 38 resources destroyed. Verified that no Elastic IPs remain orphaned (which would otherwise accrue $0.005/hr). Total session cost: roughly 50-60 cents (VPC NAT for around 2 hours, EKS control plane plus two t3.medium nodes for around 90 minutes).

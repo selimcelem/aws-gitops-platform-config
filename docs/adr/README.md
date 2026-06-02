@@ -19,3 +19,4 @@ Each ADR follows a lightweight format:
 - [ADR-0004: Kustomize overlays for dev and prod in one config repo](0004-kustomize-overlays.md)
 - [ADR-0005: S3-native state locking instead of DynamoDB](0005-s3-native-locking.md)
 - [ADR-0006: Explicit EKS access entries instead of bootstrap admin permissions](0006-eks-explicit-access-entries.md)
+- [ADR-0007: Least-privilege IAM via IRSA with deferred resource wiring](0007-irsa-least-privilege.md)
