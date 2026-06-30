@@ -10,6 +10,14 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.0"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 3.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
   }
 
   backend "s3" {
@@ -84,4 +92,38 @@ module "iam" {
   # SQS and RDS modules not yet deployed; permissions will be wired up later
   sqs_job_queue_arn = ""
   db_secret_arn     = ""
+}
+
+provider "helm" {
+  kubernetes = {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    exec = {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", var.aws_region]
+    }
+  }
+}
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", var.aws_region]
+  }
+}
+
+module "argocd" {
+  source = "./modules/argocd"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  namespace     = "argocd"
+  chart_version = "10.0.1"
+
+  depends_on = [module.eks]
 }

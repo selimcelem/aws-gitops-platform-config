@@ -55,3 +55,13 @@ output "iam_service_role_arns" {
   description = "Map of service name to IAM role ARN for IRSA. Annotate matching Kubernetes ServiceAccounts with eks.amazonaws.com/role-arn pointing at these."
   value       = module.iam.service_role_arns
 }
+
+output "argocd_namespace" {
+  description = "Namespace ArgoCD is installed into."
+  value       = module.argocd.namespace
+}
+
+output "argocd_chart_version" {
+  description = "Version of the argo-cd Helm chart installed."
+  value       = module.argocd.chart_version
+}

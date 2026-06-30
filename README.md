@@ -71,7 +71,7 @@ All infrastructure is created with terraform apply and torn down with terraform 
 
 ## Status
 
-The VPC and EKS modules are implemented and verified end-to-end against AWS (deployment evidence under docs/screenshots/). The remaining infrastructure modules (ECR, IAM, RDS, SQS, ArgoCD) are scaffolded and in progress.
+The VPC, EKS, ECR, IAM, and ArgoCD modules are implemented and verified end-to-end against AWS (deployment evidence under docs/screenshots/). ArgoCD is installed onto the cluster via Terraform and the helm provider. The remaining infrastructure modules (RDS, SQS) are scaffolded and in progress, along with the Helm charts, Kustomize overlays, and ArgoCD Application manifests for the API and worker services.
 
 ## Architecture decisions
 

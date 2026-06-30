@@ -87,3 +87,19 @@
 **Why:** Cost discipline. EKS is the largest cost contributor and runs only when there is active work to do. The S3 state bucket persists, so the next session's `terraform apply` will recreate the same 38 resources from the same code.
 
 **Result:** 38 resources destroyed. Verified that no Elastic IPs remain orphaned (which would otherwise accrue $0.005/hr). Total session cost: roughly 50-60 cents (VPC NAT for around 2 hours, EKS control plane plus two t3.medium nodes for around 90 minutes).
+
+## 2026-06-30 (ArgoCD module)
+
+**What:** I added the ArgoCD module, which installs ArgoCD onto the EKS cluster via the community argo-cd Helm chart (chart version 10.0.1, app version 3.4.4). This introduced two new Terraform providers to the project: the helm provider (3.x, using the new nested-object syntax) and the kubernetes provider (2.x). Both are configured at the root using the cluster endpoint, CA certificate, and an `aws eks get-token` exec call for short-lived authentication. The module creates a dedicated argocd namespace and the Helm release, with the server kept as a ClusterIP service.
+
+**Why:** ArgoCD is the GitOps engine the whole platform is built around. Installing it via Terraform `helm_release` rather than the AWS-managed EKS Capability (see ADR-0002) keeps the entire platform reproducible from a single `terraform apply`, demonstrates the platform-engineering work directly, and avoids the per-hour managed-capability cost. Keeping the server internal (ClusterIP, reached via `kubectl port-forward`) avoids an ELB cost and avoids exposing ArgoCD to the public internet in a dev environment.
+
+**Result:** ArgoCD running in the cluster with all seven components Ready and zero restarts. The web UI is reachable via port-forward and accepts the admin login. The dashboard correctly shows no applications yet, because this module installs the engine; the Application manifests that point ArgoCD at Helm charts are a later step. Three screenshots committed under `docs/screenshots/argocd/`. The `wait = true` setting means the apply only succeeded once every ArgoCD pod reported Ready, so a green apply is genuine proof of a healthy install. Two providers added to the lock file: helm 3.2.0 and kubernetes 2.38.0.
+
+## 2026-06-30 (session end)
+
+**What:** I ran `terraform destroy` to tear down the full platform after verifying the ArgoCD install. The destroy removed the ArgoCD Helm release and namespace first (because ArgoCD depends on the cluster), then the IAM roles, ECR repositories, EKS cluster and node group, OIDC provider, and the VPC networking.
+
+**Why:** Cost discipline. The cluster and NAT are the cost drivers, so they come down at session end. The S3 state bucket persists, so the next session recreates the same 40 resources from code.
+
+**Result:** 40 resources destroyed. Terraform relayed a harmless Helm message that the three ArgoCD CustomResourceDefinitions were kept due to the chart's resource policy; this is a safety default in the chart and is moot here because the entire cluster they lived in was destroyed in the same operation. Verified no Elastic IPs remain orphaned. Total session cost: roughly 50-70 cents (NAT plus EKS control plane plus two t3.medium nodes for around two hours, including the ArgoCD install and verification time).
